@@ -3,6 +3,7 @@ connection: "thelook_events_redshift"
 include: "main.lkml"
 
 explore: test {
+  hidden: yes
   from: users
 #   extends: [main_explore]
 }
@@ -13,6 +14,7 @@ view: latitude_widget_view {extends: [compare_using_cutoff_parameter] dimension:
 view: item_sale_price_custom_tiers {extends: [compare_using_cutoff_parameter] dimension: field_to_compare {sql:${order_items.sale_price};;}}
 
 explore: test2 {
+  hidden: yes
   join: age_widget_view {relationship: one_to_one sql:;;}
   join: latitude_widget_view {relationship: one_to_one sql:;;}
   join: item_sale_price_custom_tiers {relationship: one_to_one sql:;;}
