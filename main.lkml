@@ -48,6 +48,7 @@ view: compare_using_cutoff_parameter {
     label: "Define Groups. Like 0,100,5 (min, max, and # Groups)"
     description: "value like '0,50,5' "
     suggestions: ["0,100,10","-50,50,3"]
+    default_value: "default:0,100,10"
     type:string
 
   }
@@ -58,7 +59,8 @@ view: compare_using_cutoff_parameter {
 #     label: "{% assign label = compare_tiers_label._sql %}{% if _field._in_query == false %}Groupings by {{label}}{% else %}{{label}} Group{% endif %}"
     label: "{{ field_to_compare._sql | split: '/*label:' | last | split: '*/' | first }}"
 #     label: "{{compare_tiers_label._sql}}"
-    suggestions: ["0,100,10","-50,50,3"]
+#     suggestions: ["0,100,10","-50,50,3"]
+
 #{% assign current_max = min | plus: group_size %}
     sql:
 {% assign to_be_removed = _view._name | append: '.' %}
