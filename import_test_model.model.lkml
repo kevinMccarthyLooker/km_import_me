@@ -79,3 +79,68 @@ view: users_basic {
     type: count
   }
 }
+
+explore: custom_tiers_by_min_max_and_number_of_tiers {}
+
+
+
+
+
+
+
+
+#######
+#######
+include: "functions"
+
+view: users_view {
+  sql_table_name: public.users ;;
+  dimension: id {primary_key:yes}
+  dimension: age {}
+  dimension_group: created
+  {
+    type:time
+    timeframes: [raw,date,day_of_year,month_num,day_of_month,week_of_year,month]
+    sql:${TABLE}.created_at;;
+  }
+  dimension_group: now {
+    datatype: timestamp
+    type: time
+    timeframes: [raw,date,day_of_year,month_num,day_of_month,week_of_year,month]
+    sql: getdate() ;;
+  }
+  dimension: days_since_joined {
+    type: duration_day
+    sql_start:  ${created_date};;
+    sql_end: ${now_date} ;;
+  }
+  dimension: years_since_joined {
+    type: duration_year
+    sql_start:  ${created_date};;
+    sql_end: ${now_date} ;;
+  }
+}
+
+# view: age_times_3 {extends:[split_input_remote_multiply] dimension: input {sql:${uas2.age}^^3;;}}
+# view: id_times_100{extends:[split_input_remote_multiply] dimension: input {sql:${users_view.id}^^100;;}}
+# view: Age_Over_5{extends:[divide] dimension: input {sql:${users_view.age}^^5;;}}
+view: id_over_age
+{
+  extends:[safe_divide]
+  dimension: input {sql:${users_view.id}^^${users_view.age};;}#override with inputs, potentially with ^^ delimiter
+  dimension: output #final override out output format and labels here
+  {
+    view_label:"Users View"
+    # label: "[Override Default Label (this extending view's name)]"
+    value_format_name: decimal_2
+  }
+}
+view: acronymize1 {extends:[acronymize] dimension:input {sql:'Test'^^'another test'^^'Xavier';;}dimension:output{view_label:"Users View"}}
+explore: users_view
+{
+  # join: age_times_3 {sql:;; relationship: one_to_one}
+  # join: id_times_100 {view_label:"Users View" sql:;; relationship: one_to_one}
+  # join: Age_Over_5 {view_label:"Users View" sql:;; relationship: one_to_one}
+  join: id_over_age {sql:;; relationship: one_to_one}
+join: acronymize1 {sql:;; relationship: one_to_one}
+}
