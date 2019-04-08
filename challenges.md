@@ -1,0 +1,3 @@
+- changing back and forth between dimensions and measures
+-  - resorted to specifying explicitly
+- join order of these cross joins matters. can't refer to something that's joined latter appparently
