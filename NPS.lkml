@@ -1,6 +1,7 @@
 include: "function_support"
 view: nps {
-  dimension: primary_key {hidden:yes primary_key:yes}
+  measure: another_measure {type:sum sql:1;;}
+  dimension: primary_key { primary_key:yes}
   dimension: promoters {hidden:yes}
   dimension: detractors {hidden:yes}
   dimension: neutrals {hidden:yes}
