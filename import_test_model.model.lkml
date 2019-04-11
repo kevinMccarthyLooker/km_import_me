@@ -133,3 +133,34 @@ explore: example_numbers {
   }
   join:my_nps {sql:;; relationship:one_to_one}}
 explore: example_numbers_2 {}
+
+include: "tooltipify"
+view: count_sales_with_total_sales_as_tooltip{
+#   extends:[tooltipify_with_on_off_toggle]
+  extends: [tooltipify]
+  measure: my_measure {sql:${order_items.count};;}
+  measure: tooltip_for_my_measure {
+    sql:${order_items.total_sale_price};;}
+  dimension: view_label__sql_placeholder_input {
+    sql: t ;;
+  }
+#   measure: output {
+#     type: number
+#     sql: ${my_measure} ;;
+#     html: {{my_measure._rendered_value}}({{tooltip_for_my_measure._rendered_value}}) ;;
+#   }
+}
+explore: users_for_tooltipify {
+  join: count_sales_with_total_sales_as_tooltip {sql:;;relationship:one_to_one}
+  from: users
+  view_name: users
+  join: order_items {
+    type: left_outer
+    relationship: one_to_many
+    sql_on: ${order_items.user_id}=${users.id} ;;
+  }
+
+}
+
+# include: "test_passing_liquid_variables.view"
+# explore: test_passing_liquid_variables {}

@@ -89,16 +89,35 @@ view: output {
   dimension: output {
     hidden: yes #unhide in extending view when using
 #     view_label: " DEFAULT TO BE OVERRIDDEN" # don't put a view label if you want to be able to override from the view or join
+    view_label: "{{view_label__sql_placeholder._sql}}"
     label: "{{_view._name | replace: '_',' ' }}"
     sql: ' DEFAULT TO BE OVERRIDDEN' ;;
   }
   measure: output_measure {
+    required_fields: [view_label__sql_placeholder_viewer]
     hidden: yes #unhide in extending view when using
 #     view_label: " DEFAULT TO BE OVERRIDDEN"
+    view_label: "{{_view.view_label__sql_placeholder._sql | replace: \"''/*\", '' | replace: \"*/\", '' }}"
     label: "{{_view._name | replace: '_',' ' }}"
     sql: ' DEFAULT TO BE OVERRIDDEN' ;;
   }
+  dimension: view_label__sql_placeholder_input {sql:'default';;}
+  dimension: view_label__sql_placeholder {
+    type: string
+    required_fields: [view_label__sql_placeholder_viewer]
+    # sql: ''/*'{{ _view._name | replace: '_',' ' }}'*/ ;;
+    sql: ''/*{{ view_label__sql_placeholder_input._sql | replace: '_',' ' }}*/ ;;
 
+    # sql: {{ _field._name }} ;;
+  }
+  dimension: view_label__sql_placeholder_viewer {
+    required_fields: [view_label__sql_placeholder]
+    sql: ${view_label__sql_placeholder};;
+    }
+  dimension: output_field_label__sql_placeholder {
+    type: string
+    sql: {{_view._name | replace: '_',' ' }} ;;
+  }
 }
 #}<<<
 #^^^^ END Function Support
