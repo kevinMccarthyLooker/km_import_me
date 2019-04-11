@@ -90,9 +90,9 @@ view: nps {
 # <span style="background-color:Red;">{% for i in (1..remaining_detracts) %}😡{%assign is_odd = i | modulo: 2 %}{%if is_odd == 0 %}|{%endif%}{% endfor %}</span>
 # ;;
     html:
-    {%assign promos = promoters._value %}
-    {%assign detracts = detractors._value %}
-    {%assign neuts = neutrals._value %}
+    {%assign promos = promoters_measure._value %}
+    {%assign detracts = detractors_measure._value %}
+    {%assign neuts = neutrals_measure._value %}
     {%assign min_promos_detractors = promos %}
     {%if min_promos_detractors > detracts %}
     {%assign min_promos_detractors = detracts %}
