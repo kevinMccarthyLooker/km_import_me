@@ -126,12 +126,17 @@ view: nps {
     {%assign promos = promoters_measure._value %}
     {%assign detracts = detractors_measure._value %}
     {%assign neuts = neutrals_measure._value %}
-    <span style="background-color:#a9c574;">{% for i in (1..promos) %}😀{%assign mod = i | modulo: 10 %}{%if mod == 0 %}|{%endif%}{% endfor %}</span>
+    <span>{% for i in (1..promos) %}😀{%assign mod = i | modulo: 10 %}{%if mod == 0 %}|{%endif%}{% endfor %}</span>
     <br>
-    <span style="background-color:##b55656;">{% for i in (1..detracts) %}😡{%assign mod = i | modulo: 10 %}{%if mod == 0 %}|{%endif%}{% endfor %}</span>{%comment%}
-{%endcomment%}<span style="background-color:#929292;">{% for i in (1..neuts) %}🤖{%assign mod = i | modulo: 10 %}{%if mod == 0 %}|{%endif%}{% endfor %}</span>
+    <span>{% for i in (1..detracts) %}😡{%assign mod = i | modulo: 10 %}{%if mod == 0 %}|{%endif%}{% endfor %}</span>{%comment%}
+{%endcomment%}<span>{% for i in (1..neuts) %}🤖{%assign mod = i | modulo: 10 %}{%if mod == 0 %}|{%endif%}{% endfor %}</span>
     </div>
     ;;
+#at one point had background colors like:
+#  style="background-color:#white;"
+#  style="background-color:##b55656;"
+#  style="background-color:#929292;"
+
 #replaced with a separate field
 #     Net: ({{promos| round}} - {{detracts | round}}) / {{promos | plus: detracts | plus: neuts | round}} = {{rendered_value}}<br>
 
