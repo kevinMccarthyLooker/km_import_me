@@ -1,5 +1,6 @@
 include: "function_support"
 view: nps {
+  dimension: primary_key {hidden:yes primary_key:yes}
   dimension: promoters {hidden:yes}
   dimension: detractors {hidden:yes}
   dimension: neutrals {hidden:yes}
