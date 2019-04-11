@@ -16,7 +16,7 @@ view: compare_using_cutoff_parameter {
   {
     hidden: yes
     view_label: "Binary Compare"
-    sql:null;;#extending view must override sql parameter to be the primary_key for that view. (e.g. extending view has dimension: primary_key {sql: ${id};;}}
+    sql:null;;
   }
   dimension: compare_groups
   {

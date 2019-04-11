@@ -1,9 +1,36 @@
 ######
 ### MULTIPLE DIFFERENT versions of users base table(s)
 ######
+include: "functions"
+#testing adding above view instead of in explore:
+view: user_age_30_to_40{extends:[min_maxify_dimension]
+  dimension: input_min    {sql:30;;}
+  dimension: input_max    {sql:40;;}
+  dimension: input_field  {sql:${users.age};;}
+  dimension: output {
+    #override output format here. Otherwise it will appear using the view name.
+    label: "{{_view._name | replace: '_',' ' }}"
+    view_label: "Users"
+  }
+}
+view: user_age_30_to_param{extends:[min_maxify_dimension]
+  dimension: input_min    {sql:30;;}
+  dimension: input_max    {sql:{% parameter users.integer_input_test %};;}
+  dimension: input_field  {sql:${users.age};;}
+  dimension: output {
+    #override output format here. Otherwise it will appear using the view name.
+    label: "{{_view._name | replace: '_',' ' }}"
+    view_label: "Users"
+  }
+}
+
+# explore: user_age_30_to_40 {view_name:users hidden:yes join: user_age_30_to_40 {sql:;; relationship: one_to_one}}
+#extend users explores to include this like: extends: [user_age_30_to_40]
+#add the following join in explore: join: user_age_30_to_40 {sql:;; relationship: one_to_one}
 
 #Typical setup, but with minimal fields for clarity
 view: users{
+  parameter: integer_input_test {type:number}
   sql_table_name: public.users ;;
   dimension: id {primary_key:yes}
   dimension_group: created
@@ -25,11 +52,6 @@ view: users{
     sql_start:  ${created_date};;
     sql_end: ${now_date} ;;
   }
-
-  parameter: pass_parameter_value_test {
-    type: number
-  }
-
 }
 
 

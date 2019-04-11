@@ -4,7 +4,7 @@
 include: "function_support"
 
 view: conditionally_format__field_number__threshold_number {
-  extends: [parse_input_hidden,output]
+  extends: [parse_input,output]
   dimension: meets_threshold {
     type: number
     sql: case when ${parsed_input1}>=${parsed_input2} then 1 else 0 end;;
