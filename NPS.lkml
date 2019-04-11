@@ -61,12 +61,12 @@ view: nps {
 # {{remaining_detracts}}
 }
 
-  measure: promoters_meaure {hidden:yes}
-  measure: detractors_measure {hidden:yes}
-  measure: neutrals_measure {hidden:yes}
+  measure: promoters_measure {}
+  measure: detractors_measure {}
+  measure: neutrals_measure {}
   measure: output_measure {
     type: number
-    sql:round(100*(${promoters_meaure}-${detractors_measure})*1.0/nullif((${promoters_meaure}+${detractors_measure}+${neutrals_measure}),0));;
+    sql:round(100*(${promoters_measure}-${detractors_measure})*1.0/nullif((${promoters_measure}+${detractors_measure}+${neutrals_measure}),0));;
 # html:
 # {%assign promos = promoters._value %}
 # {%assign detracts = detractors._value %}

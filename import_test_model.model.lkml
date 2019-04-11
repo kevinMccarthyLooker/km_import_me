@@ -120,6 +120,10 @@ view: my_nps {
   dimension: promoters {sql:round(${example_numbers.random_number}*100,0);;}
   dimension: detractors {sql:round(${example_numbers_2.random_number}*100,0);;}
   dimension: neutrals{sql:${example_numbers.integers};;}
+  measure: promoters_measure {sql:round(${example_numbers.random_number}*100,0);;}
+  measure: detractors_measure {sql:round(${example_numbers_2.random_number}*100,0);;}
+  measure: neutrals_measure{sql:${example_numbers.integers};;}
+
 }
 explore: example_numbers {
   join: example_numbers_2 {
