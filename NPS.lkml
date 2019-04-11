@@ -126,10 +126,10 @@ view: nps {
     {%assign promos = promoters_measure._value %}
     {%assign detracts = detractors_measure._value %}
     {%assign neuts = neutrals_measure._value %}
-    <span>{% for i in (1..promos) %}😀{%assign mod = i | modulo: 10 %}{%if mod == 0 %}|{%endif%}{% endfor %}</span>
+    <span>{% for i in (1..promos) %}😀{%assign mod_promos = i | modulo: 10 %}{%if mod_promos == 0 %}|{%endif%}{% endfor %}</span>
     <br>
-    <span>{% for i in (1..detracts) %}😡{%assign mod = i | modulo: 10 %}{%if mod == 0 %}|{%endif%}{% endfor %}</span>{%comment%}
-{%endcomment%}<span>{% for i in (1..neuts) %}🤖{%assign mod = i | modulo: 10 %}{%if mod == 0 %}|{%endif%}{% endfor %}</span>
+    <span>{% for i in (1..detracts) %}😡{%assign mod_detracts = i | modulo: 10 %}{%if mod_detracts == 0 %}|{%endif%}{% endfor %}</span>{%comment%}
+{%endcomment%}<span>{% for i in (1..neuts) %}🤖{%assign mod_neuts = i | plus: mod_detracts | modulo: 10 %}{%if mod_neuts == 0 %}|{%endif%}{% endfor %}</span>
     </div>
     ;;
 #at one point had background colors like:
