@@ -31,12 +31,14 @@ view: user_age_30_to_param{extends:[min_maxify_dimension]
 #Typical setup, but with minimal fields for clarity
 view: users{
   parameter: integer_input_test {type:number}
-  sql_table_name: public.users ;;
+  sql_table_name: (select * from public.users where age<40);;
+# derived_table: {sql:select * from public.users where age<30;;}
   dimension: id {primary_key:yes}
   dimension_group: created
   {
     type: time
     timeframes: [raw,date,month]
+    sql: ${TABLE}.created_at ;;
   }
   dimension: age {type:number}
   dimension: latitude {type: number}

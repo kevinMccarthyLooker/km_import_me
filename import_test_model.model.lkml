@@ -131,8 +131,9 @@ explore: example_numbers {
     relationship: one_to_one
     sql_on: ${example_numbers.integers}=${example_numbers_2.integers} ;;
   }
-  join:my_nps {sql:;; relationship:one_to_one}}
-explore: example_numbers_2 {}
+  join:my_nps {sql:;; relationship:one_to_one}
+}
+
 
 include: "tooltipify"
 view: count_sales_with_total_sales_as_tooltip{
@@ -141,9 +142,7 @@ view: count_sales_with_total_sales_as_tooltip{
   measure: my_measure {sql:${order_items.count};;}
   measure: tooltip_for_my_measure {
     sql:${order_items.total_sale_price};;}
-  dimension: view_label__sql_placeholder_input {
-    sql: t ;;
-  }
+  dimension: view_label__sql_placeholder_input {sql: t ;;}
 #   measure: output {
 #     type: number
 #     sql: ${my_measure} ;;
@@ -164,3 +163,42 @@ explore: users_for_tooltipify {
 
 # include: "test_passing_liquid_variables.view"
 # explore: test_passing_liquid_variables {}
+
+include: "profile_dimension"
+view: age_dimension_profile{extends: [profile_dimension]
+  dimension: input {sql:${users.age};;}
+}
+view: sale_price_dimension_profile{extends: [profile_dimension]
+  dimension: input {sql:${order_items.sale_price};;}
+}
+view: user_created_date_dimension_profile{extends: [profile_dimension]
+  dimension: input {sql:${users.created_date};;}
+}
+view: user_age_dimension_profile_extra {
+  extends: [profile_dimension]
+#   dimension: source_view {sql:${users.SQL_TABLE_NAME};;}
+  dimension: input {sql:${users.age};;}
+#   measure: count_of_view {sql:(select ${input} from ${users.SQL_TABLE_NAME} group by ${input} order by count(*) desc limit 1);;}
+  dimension: is_number {sql:true;;}
+  measure: output_measure {
+    sql:
+${EXTENDED}||' |'
+||'sum:'||sum(${input})||' & '||'sum distinct:'||sum(distinct ${input})||' |'
+||'avg:'||avg(${input})||' & '||'avg distinct:'||avg(distinct ${input})
+    ;;
+  }
+}
+
+explore: users_for_profile_dimension {
+  join: age_dimension_profile {sql:;; relationship:one_to_one}
+  join: sale_price_dimension_profile {sql:;; relationship:one_to_one}
+  join: user_created_date_dimension_profile {sql:;; relationship:one_to_one}
+  join: user_age_dimension_profile_extra {sql:;; relationship:one_to_one}
+  from: users
+  view_name: users
+  join: order_items {
+    type: left_outer
+    relationship: one_to_many
+    sql_on: ${order_items.user_id}=${users.id} ;;
+  }
+}
