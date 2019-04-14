@@ -228,9 +228,10 @@ include: "dashboard_for_age_via_extension.dashboard"
 # }
 view: dashboard_select_fields {
   extends: [dashboard_input]
-  dimension: for_dashboard_compare_dimension {sql: ${users.age_tier} ;;}
+  dimension: compare_dimension_label {sql:'Gender';;}
+  dimension: for_dashboard_compare_dimension {sql: ${users.gender} ;;}
   dimension: for_dashboard_date_raw_field {sql:${users.created_raw};;}
-  dimension: compare_dimension_label {sql:'Age Tier';;}
+
 }
 explore: users_for_dynamic_lookml_dashboard_block_demo {
   from: users
