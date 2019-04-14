@@ -221,11 +221,7 @@ include: "extends_dashboard.dashboard"
 #i tried a find and replace all on the view name, but that's still an extra manual step, and im having trouble with 'key' property changed... I suspect having to do with dynamic fields
 #it might be easier to simply create one extension of the model for each dashboard (still change the dashboard_select_fields view name, but with different inputs)
 include: "dashboard_for_age_via_extension.dashboard"
-# view: dashboard_select_fields_age {
-#   extends: [dashboard_input]
-#   dimension: for_dashboard_compare_dimension {sql: ${users.age} ;;}
-#   dimension: for_dashboard_date_raw_field {sql:${users.created_raw};;}
-# }
+
 view: dashboard_select_fields {
   extends: [dashboard_input]
   dimension: compare_dimension_label {sql:'Gender';;}
@@ -238,4 +234,19 @@ explore: users_for_dynamic_lookml_dashboard_block_demo {
   view_name: users
   join: dashboard_select_fields {sql:;; relationship:one_to_one}
 #   join: dashboard_select_fields_age {sql:;; relationship:one_to_one}
+}
+
+view: dashboard_select_fields_age_tier {
+  extends: [dashboard_input]
+  dimension: compare_dimension_label {sql:'Age Tier';;}
+  dimension: for_dashboard_compare_dimension {sql: ${users.age_tier} ;;}
+  dimension: for_dashboard_date_raw_field {sql:${users.created_raw};;}
+}
+explore: users_for_dynamic_lookml_dashboard_block_demo2 {
+  from: users
+  view_name: users
+  join: dashboard_select_fields {
+    from: dashboard_select_fields_age_tier
+    sql:;; relationship:one_to_one
+  }
 }
