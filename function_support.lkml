@@ -1,123 +1,45 @@
-#take 'input' entered in extending view, and gather up handy information.
-#vvvvv Function Support #{
-
-#no source tables used
-
-view: parse_input {
+#This view will set base defaults for fields which may be enabled in various functions
+view: input {
   view_label: "{{_view._name}}"
-#   dimension: view_label {
-#     hidden:yes
-#     sql: TEST-{{_view._name}};;
-#   }
 
-  dimension: input {
-    hidden: yes
-#     view_label: "{{view_label._sql}}"
-    sql:;;#input will be overriden by extending view
-  }
-  measure: measure_input {
-    hidden: yes
-#     view_label: "{{view_label._sql}}"
-    sql:;;#input will be overriden by extending view
-  }
+  #Sometimes you will need to bring a dimension into the query in order to access the fully resolved sql...
+  #but you don't want selecting the dimension to change the grain of the results...
+  #can us some manipulation of sql commenting to get that done
+  dimension: input {hidden: yes}
   dimension: input_sql_holder {
+    # required_fields: [input]
     hidden: yes
-#     view_label: "{{view_label._sql}}"
-    sql:0/*${input}*/;;
-  }#need to use a looker reference IN THE QUERY so that it gets fully converted to corresponding sql.  Uses comments so that this field doesn't change query results
-
-  measure: measure_input_sql_holder {
-    hidden: yes
-#     type: string
-    sql: 0/*${measure_input}*/ ;;
+    sql:0/*${input}*/;;#need to use a looker reference IN THE QUERY so that it gets fully converted to corresponding sql.  Uses comments so that this field doesn't change query results
   }
+  # measure: measurify_input {
+  #   required_fields: [input_sql_holder]
+  #   sql:
+  #   {% assign input_to_parse = input_sql_holder._sql | append: '^^' %}
+  #   {% assign my_array = input_to_parse | remove: '0/*(' | remove: '0/*' | remove: ')*/' | remove: '*/' | split: '^^' %}
+  #   max({{my_array[0]}})
+  #   ;;
+  #   }
+    # {% assign my_array = input_to_parse | replace: '0/*','(' | remove: '*/' | replace: '^^',')' %}{{my_array[0]}}
 
-
-# dimension: parsed_input1 {sql:{% assign my_array = input_sql_holder._sql | remove: '0/*(' | remove: ')*/' | split: '^^' %}{{my_array[0]}};; required_fields: [input_sql_holder]}
-#   dimension: parsed_input1 {sql:{% assign my_array = input_sql_holder._sql | replace: '0/*','(' | remove: '*/' | replace: '^^',')' %}{{my_array[0]}};; required_fields: [input_sql_holder]}
-  dimension: parsed_input1 {hidden: yes sql:{% assign my_array = input_sql_holder._sql | remove: '0/*(' | remove: '0/*' | remove: ')*/' | remove: '*/' | split: '^^' %}{{my_array[0] }}{% assign my_array = measure_input_sql_holder._sql | remove: '0/*(' | remove: '0/*' | remove: ')*/' | remove: '*/' | split: '^^' %}{{my_array[0] }};; required_fields: [input_sql_holder,measure_input_sql_holder]}
-  dimension: parsed_input2 {hidden: yes sql:{% assign my_array = input_sql_holder._sql | remove: '0/*(' | remove: '0/*' | remove: ')*/' | remove: '*/' | split: '^^' %}{{my_array[1] }}{% assign my_array = measure_input_sql_holder._sql | remove: '0/*(' | remove: '0/*' | remove: ')*/' | remove: '*/' | split: '^^' %}{{my_array[1] }};; required_fields: [input_sql_holder,measure_input_sql_holder]}
-  dimension: parsed_input3 {hidden: yes sql:{% assign my_array = input_sql_holder._sql | remove: '0/*(' | remove: '0/*' | remove: ')*/' | remove: '*/' | split: '^^' %}{{my_array[2] }}{% assign my_array = measure_input_sql_holder._sql | remove: '0/*(' | remove: '0/*' | remove: ')*/' | remove: '*/' | split: '^^' %}{{my_array[2] }};; required_fields: [input_sql_holder,measure_input_sql_holder]}
-  dimension: parsed_input4 {hidden: yes sql:{% assign my_array = input_sql_holder._sql | remove: '0/*(' | remove: '0/*' | remove: ')*/' | remove: '*/' | split: '^^' %}{{my_array[3] }}{% assign my_array = measure_input_sql_holder._sql | remove: '0/*(' | remove: '0/*' | remove: ')*/' | remove: '*/' | split: '^^' %}{{my_array[3] }};; required_fields: [input_sql_holder,measure_input_sql_holder]}
-#}^^^
-  dimension: input1_dimension {hidden: yes sql:(${parsed_input1});;}#wrap in parens to ensure correct calculations on ratios, etc.
-  dimension: input2_dimension {hidden: yes sql:(${parsed_input2});;}
-  dimension: input3_dimension {hidden: yes sql:(${parsed_input3});;}
-  dimension: input4_dimension {hidden: yes sql:(${parsed_input4});;}
-
-  measure: input1_measure {hidden: yes sql:(${parsed_input1});;}#wrap in parens to ensure correct calculations on ratios, etc.
-  measure: input2_measure {hidden: yes sql:(${parsed_input2});;}
-  measure: input3_measure {hidden: yes sql:(${parsed_input3});;}
-  measure: input4_measure {hidden: yes sql:(${parsed_input4});;}
-
-#   measure: parsed_measure_input {sql:{% assign my_array = measure_input_sql._sql | remove: '0/*(' | remove: '0/*' | remove: ')*/' | remove: '*/' | split: '^^' %}{{my_array[0] | prepend: '(' | append: ')'}};; required_fields: [measure_input_sql]}
-#
-#   measure: parsed_measure_input1_sql {sql:{% assign my_array = measure_input_sql._sql | remove: '0/*(' | remove: '0/*' | remove: ')*/' | remove: '*/' | split: '^^' %}{{my_array[0]}};; required_fields: [measure_input_sql]}
-#   measure: parsed_measure_input1_measure {sql:{{ parsed_measure_input1_sql._sql | prepend: '(' | append: ')' }};; required_fields: [measure_input_sql]}
-#
-#
-#   dimension: parsed_measure_input1_sql_as_dimension{sql:{% assign my_array = measure_input_sql._sql | remove: '0/*(' | remove: '0/*' | remove: ')*/' | remove: '*/' | split: '^^' %}{{my_array[0]}};; required_fields: [measure_input_sql]}
-
+# {% assign my_array = measure_input_sql_holder._sql | remove: '0/*(' | remove: '0/*' | remove: ')*/' | remove: '*/' | split: '^^' %}{{my_array[1] }}
+    measure: measure_input {hidden: yes}
 }
-
-
-#use this version to keep fields hidden. The unhidden version can be used for testing
-view: parse_input_unhidden {
-  extends: [parse_input]
-  dimension: input            {group_label:"{{_view._name}}(hidden fields)" hidden:no}
-  dimension: input_sql_holder {group_label:"{{_view._name}}(hidden fields)" hidden:no}
-  dimension: parsed_input1    {group_label:"{{_view._name}}(hidden fields)" hidden:no}
-  dimension: parsed_input2    {group_label:"{{_view._name}}(hidden fields)" hidden:no}
-  dimension: parsed_input3    {group_label:"{{_view._name}}(hidden fields)" hidden:no}
-  dimension: parsed_input4    {group_label:"{{_view._name}}(hidden fields)" hidden:no}
-  dimension: input1_dimension {group_label:"{{_view._name}}(hidden fields)" hidden:no}
-  dimension: input2_dimension {group_label:"{{_view._name}}(hidden fields)" hidden:no}
-  dimension: input3_dimension {group_label:"{{_view._name}}(hidden fields)" hidden:no}
-  dimension: input4_dimension {group_label:"{{_view._name}}(hidden fields)" hidden:no}
-  measure: input1_measure     {group_label:"{{_view._name}}(hidden fields)" hidden:no}
-  measure: input2_measure     {group_label:"{{_view._name}}(hidden fields)" hidden:no}
-  measure: input3_measure     {group_label:"{{_view._name}}(hidden fields)" hidden:no}
-  measure: input4_measure     {group_label:"{{_view._name}}(hidden fields)" hidden:no}
-}
-
-
-
 
 #defaults for the output field
 view: output {
   view_label: "{{_view._name}}"
   dimension: output {
     hidden: yes #unhide in extending view when using
-#     view_label: " DEFAULT TO BE OVERRIDDEN" # don't put a view label if you want to be able to override from the view or join
-    view_label: "{{view_label__sql_placeholder._sql}}"
+    view_label: "{{_view._name | replace: '_',' ' }}"
     label: "{{_view._name | replace: '_',' ' }}"
     sql: ' DEFAULT TO BE OVERRIDDEN' ;;
   }
   measure: output_measure {
-    required_fields: [view_label__sql_placeholder_viewer]
+    type: number
     hidden: yes #unhide in extending view when using
-#     view_label: " DEFAULT TO BE OVERRIDDEN"
-    view_label: "{{_view.view_label__sql_placeholder._sql | replace: \"''/*\", '' | replace: \"*/\", '' }}"
+    view_label: "{{_view._name | replace: '_',' ' }}"
+    #     view_label: "{{_view.view_label__sql_placeholder._sql | replace: \"''/*\", '' | replace: \"*/\", '' }}"
     label: "{{_view._name | replace: '_',' ' }}"
     sql: ' DEFAULT TO BE OVERRIDDEN' ;;
   }
-  dimension: view_label__sql_placeholder_input {sql:'default';;}
-  dimension: view_label__sql_placeholder {
-    type: string
-    required_fields: [view_label__sql_placeholder_viewer]
-    # sql: ''/*'{{ _view._name | replace: '_',' ' }}'*/ ;;
-    sql: ''/*{{ view_label__sql_placeholder_input._sql | replace: '_',' ' }}*/ ;;
-
-    # sql: {{ _field._name }} ;;
-  }
-  dimension: view_label__sql_placeholder_viewer {
-    required_fields: [view_label__sql_placeholder]
-    sql: ${view_label__sql_placeholder};;
-    }
-  dimension: output_field_label__sql_placeholder {
-    type: string
-    sql: {{_view._name | replace: '_',' ' }} ;;
-  }
 }
-#}<<<
-#^^^^ END Function Support
