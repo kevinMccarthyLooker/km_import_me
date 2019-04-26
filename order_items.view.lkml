@@ -5,6 +5,8 @@ view: order_items {
   dimension: id {}#primary_key:yes}
   dimension: primary_key {sql:${id};;}
   dimension: user_id {}
+  dimension: order_id {}
+  dimension: inventory_item_id {}
   dimension: sale_price {type:number sql:floor(sale_price);;}
   dimension: sale_price_tier {type:tier tiers:[10,20,40,80,160,800] sql:${sale_price};;}
   dimension: status {}

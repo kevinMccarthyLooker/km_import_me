@@ -250,3 +250,42 @@ explore: users_for_dynamic_lookml_dashboard_block_demo2 {
     sql:;; relationship:one_to_one
   }
 }
+
+
+include: "inventory_items.view"
+include: "products.view"
+################
+explore: order_items {
+  join: inventory_items {
+    type: left_outer
+    sql_on: ${order_items.inventory_item_id} = ${inventory_items.id} ;;
+    relationship: many_to_one
+  }
+
+  join: products {
+    type: left_outer
+    sql_on: ${inventory_items.product_id} = ${products.id} ;;
+    relationship: many_to_one
+  }
+}
+include: "affinity_analysis"
+# AFFINITY ANALYSIS BLOCK
+############################################################
+## DEVELOPER WILL READ AND MAKE UPDATES IN THIS SECTION
+# Paste this code in your model file.
+# Follow steps to add extenal dependency #*link or steps#
+# REQUIRED UPDATES:
+# 1) explore_soure: MY_EXPLORE_NAME
+# 2) field: MY_VIEW_NAME.MY_FIELD_NAME - for both parent and child fields (Note: must be valid for the explore_source)
+view: affinity_analysis_input {
+  extends: [affinity_analysis_base]
+  derived_table: {
+    explore_source: order_items {
+      column: parent_field {field: order_items.order_id}
+      column: child_field {field: products.name}
+    }
+  }
+}
+explore: affinity_analysis {from:affinity_analysis_input extends:[affinity_analysis_base_explore]}
+## END OF CODE DEVELOPER NEEDS TO SEE
+############################################################
