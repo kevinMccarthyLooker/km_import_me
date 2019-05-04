@@ -269,16 +269,49 @@ explore: order_items {
   }
 }
 include: "affinity_analysis"
+explore: users_for_affinity_analysis {
+  view_name: users
+  from: users
+  join: order_items {
+    type: left_outer
+    relationship: one_to_many
+    sql_on: ${order_items.user_id}=${users.id} ;;
+  }
+}
 # AFFINITY ANALYSIS BLOCK
 ############################################################
 ## DEVELOPER WILL READ AND MAKE UPDATES IN THIS SECTION
 # Paste this code in your model file.
 # Follow steps to add extenal dependency #*link or steps#
-# REQUIRED UPDATES:
+# REQUIRED UPDATES
 # 1) explore_soure: MY_EXPLORE_NAME
-# 2) field: MY_VIEW_NAME.MY_FIELD_NAME - for both parent and child fields (Note: must be valid for the explore_source)
-view: affinity_analysis_input {
-  extends: [affinity_analysis_base]
+# 2) column: parent_field {field: YOUR_PARENT_FIELDS_VIEW.YOUR_PARENT_FIELD} (about 5 lines down. must be valid in your explore
+# 3) .. and the next line... column: child_field {field: YOUR_CHILD_FIELDS_VIEW.YOUR_CHILD_FIELD}
+# 4) Do find and replace all the below occurrences of CHILD_FIELD_on_PARENT_FIELD with the appropriate replacements
+
+# view: affinity_analysis_input_view_for_CHILD_FIELD_on_PARENT_FIELD {extends: [affinity_analysis_base]
+#   derived_table: {
+#     explore_source: MY_EXPLORE_NAME {
+#       column: parent_field {field: YOUR_PARENT_FIELDS_VIEW.YOUR_PARENT_FIELD}
+#       column: child_field {field: YOUR_CHILD_FIELDS_VIEW.YOUR_CHILD_FIELD}
+#     }
+#   }
+# }
+# view: subtotals_for_CHILD_FIELD_on_PARENT_FIELD {extends: [subtotals_base]
+#   derived_table: {explore_source: affinity_analysis_for_CHILD_FIELD_on_PARENT_FIELD}
+# }
+# view: grand_total_for_CHILD_FIELD_on_PARENT_FIELD {extends: [grand_total_base]
+#   derived_table: {explore_source: affinity_analysis_for_CHILD_FIELD_on_PARENT_FIELD}
+# }
+# explore: affinity_analysis_for_CHILD_FIELD_on_PARENT_FIELD {extends: [affinity_analysis_base_explore]
+#   from: affinity_analysis_input_view_for_CHILD_FIELD_on_PARENT_FIELD
+#   join: self_join         {from: affinity_analysis_input_view_for_CHILD_FIELD_on_PARENT_FIELD}
+#   join: child_a_subtotals {from: subtotals_for_CHILD_FIELD_on_PARENT_FIELD}
+#   join: child_b_subtotals {from: subtotals_for_CHILD_FIELD_on_PARENT_FIELD}
+#   join: grand_total       {from: grand_total_for_CHILD_FIELD_on_PARENT_FIELD}
+# }
+
+view: affinity_analysis_input_view_for_product_name_on_order_id {extends: [affinity_analysis_base]
   derived_table: {
     explore_source: order_items {
       column: parent_field {field: order_items.order_id}
@@ -286,6 +319,358 @@ view: affinity_analysis_input {
     }
   }
 }
-explore: affinity_analysis {from:affinity_analysis_input extends:[affinity_analysis_base_explore]}
+view: subtotals_for_product_name_on_order_id {extends: [subtotals_base]
+  derived_table: {explore_source: affinity_analysis_for_product_name_on_order_id}
+}
+view: grand_total_for_product_name_on_order_id {extends: [grand_total_base]
+  derived_table: {explore_source: affinity_analysis_for_product_name_on_order_id}
+}
+explore: affinity_analysis_for_product_name_on_order_id {extends: [affinity_analysis_base_explore]
+  from: affinity_analysis_input_view_for_product_name_on_order_id
+  join: self_join         {from: affinity_analysis_input_view_for_product_name_on_order_id}
+  join: child_a_subtotals {from: subtotals_for_product_name_on_order_id}
+  join: child_b_subtotals {from: subtotals_for_product_name_on_order_id}
+  join: grand_total       {from: grand_total_for_product_name_on_order_id}
+}
+
+#again, for users instead of orders
+view: affinity_analysis_input_view_for_product_name_on_user_id {extends: [affinity_analysis_base]
+  derived_table: {
+    explore_source: order_items {
+      column: parent_field {field: order_items.user_id}
+      column: child_field {field: products.name}
+#       expression_custom_filter: order_items.created_date = 2018-01-01 12:00:00 ;;
+#       bind_filters: {
+#         from_field: affinity_analysis.affinity_timeframe
+#         to_field: order_items.created_date
+#       }
+    }
+  }
+}
+view: subtotals_for_product_name_on_user_id {extends: [subtotals_base]
+  derived_table: {
+    explore_source: affinity_analysis_for_product_name_on_user_id{}
+  }
+}
+view: grand_total_for_product_name_on_user_id {extends: [grand_total_base]
+  derived_table: {explore_source: affinity_analysis_for_product_name_on_user_id}
+}
+explore: affinity_analysis_for_product_name_on_user_id {extends: [affinity_analysis_base_explore]
+  from: affinity_analysis_input_view_for_product_name_on_user_id
+  join: self_join         {from: affinity_analysis_input_view_for_product_name_on_user_id}
+  join: child_a_subtotals {from: subtotals_for_product_name_on_user_id}
+  join: child_b_subtotals {from: subtotals_for_product_name_on_user_id}
+  join: grand_total       {from: grand_total_for_product_name_on_user_id}
+}
+
+#note, tried to use bind filters to add a date filter like in the discourse.
+#but would have to go back to declaring the source of the subtables separately... the subtotals ndts don't pick up and push down the filter
+
+
+#example:
+# view: affinity_analysis_input_for_product_names_on_orders {extends: [affinity_analysis_base]
+#   derived_table: {
+#     explore_source: order_items {
+#       column: parent_field {field: order_items.order_id}
+#       column: child_field {field: products.name}
+#     }
+#   }
+# }
+# view: total_order_product_ndt_extended_for_product_names_on_orders {extends: [subtotals_base]
+#   derived_table: {explore_source: affinity_analysis_for_product_names_on_orders_explore}
+# }
+# view: total_orders_ndt_extended_for_product_names_on_orders {extends: [grand_total_base]
+#   derived_table: {explore_source: affinity_analysis_for_product_names_on_orders_explore }
+# }
+# explore: affinity_analysis_for_product_names_on_orders_explore {
+#   extends: [affinity_analysis_base_explore]
+#   from: affinity_analysis_input_for_product_names_on_orders
+#   join: self_join         {from: affinity_analysis_input_for_product_names_on_orders}
+#   join: child_a_subtotals {from: total_order_product_ndt_extended_for_product_names_on_orders}
+#   join: child_b_subtotals {from: total_order_product_ndt_extended_for_product_names_on_orders}
+#   join: grand_total       {from: total_orders_ndt_extended_for_product_names_on_orders}
+# }
+
+
+
+
+#Affinity Block -- Generic version if you don't want to explicitly list fields...
+# view: affinity_analysis_input {
+#   extends: [affinity_analysis_base]
+#   derived_table: {
+#     explore_source: users_for_affinity_analysis {
+#       column: parent_field {field: users.id}
+#       column: child_field {field: order_items.inventory_item_id}
+#     }
+#   }
+# }
+# view: affinity_analysis_subtotals {extends: [subtotals_base]
+#   derived_table: {explore_source: affinity_analysis_extended_explore}
+# }
+# view: affinity_analysis_grand_total {extends: [grand_total_base]
+#   derived_table: {explore_source: affinity_analysis_extended_explore }
+# }
+# explore: affinity_analysis_explore {
+#   extends: [affinity_analysis_base_explore]
+#   from: affinity_analysis_input
+#   join: self_join         {from: affinity_analysis_input}
+#   join: child_a_subtotals {from: affinity_analysis_subtotals}
+#   join: child_b_subtotals {from: affinity_analysis_subtotals}
+#   join: grand_total  {from: affinity_analysis_grand_total}
+# }
 ## END OF CODE DEVELOPER NEEDS TO SEE
 ############################################################
+
+
+#Sequencing Transactions
+#https://discourse.looker.com/t/analytic-block-sequencing-transactions/265
+
+# explore: sequence_base_placeholder  {
+#   from: order_items
+#   view_name: order_items
+#   join: users {
+#     sql_on: ${order_items.user_id}=${users.id} ;;
+#     type: left_outer
+#     relationship: many_to_one
+#   }
+#   join: sequencing_ndt {
+#     sql_on: ${sequencing_ndt.child_unique_id}=${order_items.id} ;;
+#     relationship: one_to_one
+#   }
+# }
+
+# view: sequencing_ndt {
+#   derived_table: {
+#     explore_source: order_items__sequence_base_placeholder {
+#       column: order_id {field:order_items.order_id}
+#       # column: created {field:order_items.created_raw}
+#       column: order_item_id {field:order_items.id}
+#       derived_column: sequence_number {sql:ROW_NUMBER() OVER(PARTITION BY order_id ORDER BY order_item_id);;}
+#     }
+#   }
+
+#   dimension: order_id {type:number}
+#   dimension: order_item_id {type:number}
+#   dimension: sequence_number {type:number}
+# }
+
+
+###need to control the order by?
+
+### Sequencing 5/2
+# Developer will paste the manifest file and a couple blocks in the explore, then update the input fields
+# *Uses NDT which depends on this exact name, so right now this doesn't flexibly handle multiple sequences concurrently
+# *Tried using seqence_input as an extension of the NDT but it was a circular dependency
+
+# (BB Step 1): Paste the sequence_input view and update the sql parameters as appropriate for this analysis
+
+#######
+# Extended version.  Allows multiple different transactions sequences at once
+# view: sequence_input2 {#?name by the parent/child combination?
+#   #Update with fields that are valid together in an explore:
+#   dimension: input_parent_unique_id__dimension {sql:${order_items.order_id};;}
+#   dimension: input_child_unique_id__dimension {sql:${order_items.id};;}
+#   dimension: order_by_dimension {sql:${order_items.id};;}#must be same as child field or have a one_to_one relationship (ie id and created_time is ok)
+# }
+# explore: sequence_input_explore2 {#?name by the parent/child combination?
+#   #update 'my_explore' to your explore name
+#   extends:[my_explore,sequence_input_explore_placeholder]
+#   join: sequence_input {from:sequence_input2}#update with the view name given above
+#   join: sequencing_ndt {from:sequencing_ndt_extended}#update with the name of the NDT you created via extension
+# }
+#
+# #need to be able to create multiple NDTs...
+# view: sequencing_ndt_extended {
+#   extends:[sequencing_ndt]
+#   derived_table: {explore_source: sequence_input_explore2 } #update with the name of the input explore you defined
+# }
+
+#########
+# Extended version.  Allows multiple different transactions sequences at once
+view: sequence_input__order_item_for_user__view {#?name by the parent/child combination?
+  #Update with fields that are valid together in an explore:
+  dimension: input_parent_unique_id__dimension  {sql:${order_items.user_id};;}
+  dimension: input_child_unique_id__dimension   {sql:${order_items.id};;}
+  dimension: order_by_dimension                 {sql:${order_items.id};;}#must be same as child field or have a one_to_one relationship (ie id and created_time is ok)
+}
+explore: sequence_input__order_item_for_user__explore {#?name by the parent/child combination?
+  extends:[my_explore] #update 'my_explore' to your explore name
+  #may need to explicitly mention base view name of my_explore (if it's not set explicitly in the base)
+  join: sequence_input__order_item_for_user__view {sql:;;relationship:one_to_one}
+  join: sequence__order_item_for_user__ndt {
+    sql_on:
+    sequence__order_item_for_user__ndt.child_unique_id   =${sequence_input__order_item_for_user__view.input_child_unique_id__dimension} and
+    sequence__order_item_for_user__ndt.parent_unique_id  =${sequence_input__order_item_for_user__view.input_parent_unique_id__dimension} and
+    sequence__order_item_for_user__ndt.order_by_dimension=${sequence_input__order_item_for_user__view.order_by_dimension}
+    ;;
+    relationship: one_to_one
+  }
+}
+view: sequence__order_item_for_user__ndt {
+  extends:[sequencing_ndt]
+  derived_table: {
+    #update with the name of the input explore you defined
+    explore_source: sequence_input__order_item_for_user__explore {
+      #update the base view name of each field to the input view you defined
+      column: parent_unique_id    {field:sequence_input__order_item_for_user__view.input_parent_unique_id__dimension}
+      column: child_unique_id     {field:sequence_input__order_item_for_user__view.input_child_unique_id__dimension}
+      column: order_by_dimension  {field:sequence_input__order_item_for_user__view.order_by_dimension}
+    }
+  }
+}
+
+# Another Extended version.  Shows multiple different transactions sequences at once
+view: sequence_input__order_item_for_order__view {#?name by the parent/child combination?
+  #Update with fields that are valid together in an explore:
+  dimension: input_parent_unique_id__dimension  {sql:${order_items.order_id};;}
+  dimension: input_child_unique_id__dimension   {sql:${order_items.id};;}
+  dimension: order_by_dimension                 {sql:${order_items.id};;}#must be same as child field or have a one_to_one relationship (ie id and created_time is ok)
+}
+explore: sequence_input__order_item_for_order__explore {#?name by the parent/child combination?
+  extends:[my_explore] #update 'my_explore' to your explore name
+  #may need to explicitly mention base view name of my_explore (if it's not set explicitly in the base)
+  join: sequence_input__order_item_for_order__view {sql:;;relationship:one_to_one}
+  join: sequence_input__order_item_for_order__ndt {
+    sql_on:
+      sequence_input__order_item_for_order__ndt.child_unique_id   =${sequence_input__order_item_for_order__view.input_child_unique_id__dimension} and
+      sequence_input__order_item_for_order__ndt.parent_unique_id  =${sequence_input__order_item_for_order__view.input_parent_unique_id__dimension} and
+      sequence_input__order_item_for_order__ndt.order_by_dimension=${sequence_input__order_item_for_order__view.order_by_dimension}
+      ;;
+    relationship: one_to_one
+  }
+}
+view: sequence_input__order_item_for_order__ndt {
+  extends:[sequencing_ndt]
+  derived_table: {
+    #update with the name of the input explore you defined
+    explore_source: sequence_input__order_item_for_order__explore {
+      #update the base view name of each field to the input view you defined
+      column: parent_unique_id    {field:sequence_input__order_item_for_order__view.input_parent_unique_id__dimension}
+      column: child_unique_id     {field:sequence_input__order_item_for_order__view.input_child_unique_id__dimension}
+      column: order_by_dimension  {field:sequence_input__order_item_for_order__view.order_by_dimension}
+    }
+  }
+}
+
+# A third Extended version.  Shows multiple different transactions sequences at once
+# process to create a new version (after manifest and paste template
+# (BB Step 1): Update the dimnensions named below, for the sequencing you want
+# (BB Step 2): Update the view name just above, replacing [the templated name] (the text up to '__view') with the [name you want for this anaylysis]
+# (BB Step 3): Find and replace occurrences of [the templated name] with your updated name. (varios references to ...__view, ...__ndt, and ...__explore
+# (BB Step 4): Update 'my_explore' in __explore to match the explore you want to use this with
+# (BB Step 5): Update your main explore by extending with [name you want for this anaylysis]__explore
+view: sequence_input__order_item_for_gender__view {#?name by the parent/child combination?
+  #Update with fields that are valid together in an explore:
+  dimension: input_parent_unique_id__dimension  {sql:${users.gender};;}
+  dimension: input_child_unique_id__dimension   {sql:${order_items.id};;}
+  dimension: order_by_dimension                 {sql:${order_items.id};;}#must be same as child field or have a one_to_one relationship (ie id and created_time is ok)
+}
+view: sequence_input__order_item_for_gender__ndt {
+  extends:[sequencing_ndt]
+  derived_table: {
+    #update with the name of the input explore you defined
+    explore_source: sequence_input__order_item_for_gender__explore {
+      #update the base view name of each field to the input view you defined
+      column: parent_unique_id    {field:sequence_input__order_item_for_gender__view.input_parent_unique_id__dimension}
+      column: child_unique_id     {field:sequence_input__order_item_for_gender__view.input_child_unique_id__dimension}
+      column: order_by_dimension  {field:sequence_input__order_item_for_gender__view.order_by_dimension}
+    }
+  }
+}
+explore: sequence_input__order_item_for_gender__explore {#?name by the parent/child combination?
+  extends:[my_explore] #update 'my_explore' to your explore name
+  #may need to explicitly mention base view name of my_explore (if it's not set explicitly in the base)
+  join: sequence_input__order_item_for_gender__view {sql:;;relationship:one_to_one}
+  join: sequence_input__order_item_for_gender__ndt {
+    sql_on:
+        sequence_input__order_item_for_gender__ndt.child_unique_id   =${sequence_input__order_item_for_gender__view.input_child_unique_id__dimension} and
+        sequence_input__order_item_for_gender__ndt.parent_unique_id  =${sequence_input__order_item_for_gender__view.input_parent_unique_id__dimension} and
+        sequence_input__order_item_for_gender__ndt.order_by_dimension=${sequence_input__order_item_for_gender__view.order_by_dimension}
+        ;;
+    relationship: one_to_one
+  }
+}
+
+
+
+
+explore: my_explore {
+  #update with any number of sequencing explores
+  extends: [sequence_input__order_item_for_user__explore,sequence_input__order_item_for_order__explore,sequence_input__order_item_for_gender__explore]
+
+  from: order_items
+  view_name: order_items
+  join: users {
+    sql_on: ${order_items.user_id}=${users.id} ;;
+    type: left_outer
+    relationship: many_to_one
+  }
+}
+
+###############
+### move to sequencing lookml file
+
+# original one time use input explore
+# need to remove specific references..
+explore: sequence_input_explore {
+  extends:[my_explore,sequence_input_explore_placeholder]}#update to your explore name
+view: sequence_input {
+  # dimension: input_parent_unique_id__dimension {sql:${order_items.order_id};;}
+  # dimension: input_child_unique_id__dimension {sql:${order_items.id};;}
+  # dimension: order_by_dimension {sql:${order_items.id};;}#must be same as child field or have a one_to_one relationship (ie id and created_time is ok)
+  dimension: input_parent_unique_id__dimension {sql:;;}
+  dimension: input_child_unique_id__dimension {sql:;;}
+  dimension: order_by_dimension {sql:;;}#must be same as child field or have a one_to_one relationship (ie id and created_time is ok)
+  #order by?
+}
+#########
+
+
+explore: sequence_input_explore_placeholder {
+  extension: required
+  join: sequence_input {sql:;;relationship:one_to_one}
+  join: sequencing_ndt {
+    sql_on:
+      ${sequencing_ndt.child_unique_id}=${sequence_input.input_child_unique_id__dimension} and
+      ${sequencing_ndt.parent_unique_id}=${sequence_input.input_parent_unique_id__dimension} and
+      ${sequencing_ndt.order_by_dimension}=${sequence_input.order_by_dimension};;
+    relationship: one_to_one
+  }
+}
+
+view: sequencing_ndt {
+  extends: [sequence_input]
+  derived_table: {
+    explore_source: sequence_input_explore {
+      column: parent_unique_id  {field:sequence_input.input_parent_unique_id__dimension}
+      column: child_unique_id   {field:sequence_input.input_child_unique_id__dimension}
+
+      column: order_by_dimension {field:sequence_input.order_by_dimension}
+
+      derived_column: sequence_number {sql:ROW_NUMBER() OVER(PARTITION BY parent_unique_id ORDER BY order_by_dimension);;}
+    }
+  }
+
+  dimension: parent_unique_id {type:number}
+  dimension: child_unique_id {type:number}
+  dimension: order_by_dimension {type:number}
+  dimension: sequence_number {type:number}
+}
+
+
+
+
+# view: sequencing_ndt {
+#   derived_table: {
+#     explore_source: sequence_base_placeholder {
+#       column: parent_unique_id  {field:order_items.order_id}
+#       column: child_unique_id   {field:order_items.id}
+
+#       derived_column: sequence_number {sql:ROW_NUMBER() OVER(PARTITION BY parent_unique_id ORDER BY child_unique_id);;}
+#     }
+#   }
+
+#   dimension: parent_unique_id {type:number}
+#   dimension: child_unique_id {type:number}
+#   dimension: sequence_number {type:number}
+# }

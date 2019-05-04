@@ -31,7 +31,11 @@ view: affinity_analysis_base {
   dimension: parent_field {label: "Parent Field Value" description:"Not used in Affinity Analysis Output.  For Reference & Testing"}
   dimension: child_field {label:"Child Value ({% if _view._name == 'self_join' %}B{% else %}A{% endif %})"}
   measure: unique_parent_and_child_combinations {type: count} #NOTE: two of the same item not counted twice
-#   measure: grand_total2 {type:number sql:(select count(*) as grand_total from {{_view._name}});;}
+
+  filter: affinity_timeframe {
+    type: date
+  }
+
 }
 
 
@@ -51,16 +55,17 @@ join: self_join {
   sql_on: ${self_join.parent_field} = ${affinity_analysis.parent_field} and ${self_join.child_field}<>${affinity_analysis.child_field};;#?use greater than so we don't get repeats of the same combintion in reverse order? #discourse just shows <>
 }
 join: child_a_subtotals {#subtotal of distinct Parent Event/Values having Child Value A
-  from: total_order_product_ndt
+  from: subtotals_base
   relationship: one_to_one #has no measures
   sql_on: ${affinity_analysis.child_field}=${child_a_subtotals.child_field} ;;
 }
 join: child_b_subtotals {#subtotal of distinct Parent Event/Values having Child Value B
-  from: total_order_product_ndt
+  from: subtotals_base
   relationship: one_to_one #has no measures
   sql_on: ${self_join.child_field}=${child_b_subtotals.child_field} ;;
 }
-join: total_orders_ndt {
+join: grand_total {
+  from: grand_total_base
   view_label: "Affinity Analysis"
   type: cross
   relationship: one_to_one
@@ -70,7 +75,7 @@ join: final_calculations {view_label: "Affinity Analysis" sql:;; relationship:on
 
 #######################
 ###### 2) 'CREATE SUBTOTAL LOOKUP VIEWS': Use unique combinations table/explore from previous steps to get and store count of distinct Parents having each Child_Value, and also grand total of Parent_and_Child combinations, for use in final frequency calculations
-view: total_order_product_ndt {
+view: subtotals_base {
   derived_table: {
     explore_source: affinity_analysis_base_explore {
       column: child_field {field:affinity_analysis.child_field}
@@ -80,7 +85,7 @@ view: total_order_product_ndt {
   dimension: child_field {hidden:yes}
   measure: total_combinations_for_product {type:max hidden:yes}
 }
-view: total_orders_ndt {
+view: grand_total_base {
   derived_table: {explore_source: affinity_analysis_base_explore {column: grand_total {field:affinity_analysis.unique_parent_and_child_combinations}}}
   measure: grand_total {type: max}
 }
@@ -91,19 +96,19 @@ view: final_calculations {
   measure: child_value_a_frequency {
     description: "How frequently orders include product A as a percent of total orders"
     type: number
-    sql: 1.0*${child_a_subtotals.total_combinations_for_product}/${total_orders_ndt.grand_total} ;;
+    sql: 1.0*${child_a_subtotals.total_combinations_for_product}/${grand_total.grand_total} ;;
     value_format: "#.00%"
   }
   measure: child_value_b_frequency {
     description: "How frequently orders include product B as a percent of total orders"
     type: number
-    sql: 1.0*${child_b_subtotals.total_combinations_for_product}/${total_orders_ndt.grand_total} ;;
+    sql: 1.0*${child_b_subtotals.total_combinations_for_product}/${grand_total.grand_total} ;;
     value_format: "#.00%"
   }
   measure: combination_frequency {
     description: "How frequently orders include both product A and B as a percent of total orders"
     type: number
-    sql: 1.0*${affinity_analysis.unique_parent_and_child_combinations}/${total_orders_ndt.grand_total} ;;
+    sql: 1.0*${affinity_analysis.unique_parent_and_child_combinations}/${grand_total.grand_total} ;;
     value_format: "#.00%"
   }
   # Affinity Metrics

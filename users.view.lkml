@@ -38,6 +38,9 @@ view: users{
 #     sql_end: ${now_date} ;;
     sql_end: '${current_date_unquoted}' ;;
   }
-
+  ##special test for sequencing
+  dimension: age_and_gender_combo {
+    sql: ${age}||'-'||${gender}  ;;
+}
 
 }
