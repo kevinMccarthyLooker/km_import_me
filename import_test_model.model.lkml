@@ -458,219 +458,36 @@ explore: affinity_analysis_for_product_name_on_user_id {extends: [affinity_analy
 ###need to control the order by?
 
 ### Sequencing 5/2
+include: "sequence_transaction.lkml"
 # Developer will paste the manifest file and a couple blocks in the explore, then update the input fields
 # *Uses NDT which depends on this exact name, so right now this doesn't flexibly handle multiple sequences concurrently
 # *Tried using seqence_input as an extension of the NDT but it was a circular dependency
 
 # (BB Step 1): Paste the sequence_input view and update the sql parameters as appropriate for this analysis
 
-#######
-# Extended version.  Allows multiple different transactions sequences at once
-# view: sequence_input2 {#?name by the parent/child combination?
-#   #Update with fields that are valid together in an explore:
-#   dimension: input_parent_unique_id__dimension {sql:${order_items.order_id};;}
-#   dimension: input_child_unique_id__dimension {sql:${order_items.id};;}
-#   dimension: order_by_dimension {sql:${order_items.id};;}#must be same as child field or have a one_to_one relationship (ie id and created_time is ok)
-# }
-# explore: sequence_input_explore2 {#?name by the parent/child combination?
-#   #update 'my_explore' to your explore name
-#   extends:[my_explore,sequence_input_explore_placeholder]
-#   join: sequence_input {from:sequence_input2}#update with the view name given above
-#   join: sequencing_ndt {from:sequencing_ndt_extended}#update with the name of the NDT you created via extension
-# }
-#
-# #need to be able to create multiple NDTs...
-# view: sequencing_ndt_extended {
-#   extends:[sequencing_ndt]
-#   derived_table: {explore_source: sequence_input_explore2 } #update with the name of the input explore you defined
-# }
-
-#########
-# Extended version.  Allows multiple different transactions sequences at once
-view: sequence_input__order_item_for_user__view {#?name by the parent/child combination?
-  #Update with fields that are valid together in an explore:
-  dimension: input_parent_unique_id__dimension  {sql:${order_items.user_id};;}
-  dimension: input_child_unique_id__dimension   {sql:${order_items.id};;}
-  dimension: order_by_dimension                 {sql:${order_items.id};;}#must be same as child field or have a one_to_one relationship (ie id and created_time is ok)
-}
-explore: sequence_input__order_item_for_user__explore {#?name by the parent/child combination?
-  extends:[my_explore] #update 'my_explore' to your explore name
-  #may need to explicitly mention base view name of my_explore (if it's not set explicitly in the base)
-  join: sequence_input__order_item_for_user__view {sql:;;relationship:one_to_one}
-  join: sequence__order_item_for_user__ndt {
-    sql_on:
-    sequence__order_item_for_user__ndt.child_unique_id   =${sequence_input__order_item_for_user__view.input_child_unique_id__dimension} and
-    sequence__order_item_for_user__ndt.parent_unique_id  =${sequence_input__order_item_for_user__view.input_parent_unique_id__dimension} and
-    sequence__order_item_for_user__ndt.order_by_dimension=${sequence_input__order_item_for_user__view.order_by_dimension}
-    ;;
-    relationship: one_to_one
-  }
-}
-view: sequence__order_item_for_user__ndt {
-  extends:[sequencing_ndt]
-  derived_table: {
-    #update with the name of the input explore you defined
-    explore_source: sequence_input__order_item_for_user__explore {
-      #update the base view name of each field to the input view you defined
-      column: parent_unique_id    {field:sequence_input__order_item_for_user__view.input_parent_unique_id__dimension}
-      column: child_unique_id     {field:sequence_input__order_item_for_user__view.input_child_unique_id__dimension}
-      column: order_by_dimension  {field:sequence_input__order_item_for_user__view.order_by_dimension}
-    }
-  }
-}
-
-# Another Extended version.  Shows multiple different transactions sequences at once
-view: sequence_input__order_item_for_order__view {#?name by the parent/child combination?
-  #Update with fields that are valid together in an explore:
-  dimension: input_parent_unique_id__dimension  {sql:${order_items.order_id};;}
-  dimension: input_child_unique_id__dimension   {sql:${order_items.id};;}
-  dimension: order_by_dimension                 {sql:${order_items.id};;}#must be same as child field or have a one_to_one relationship (ie id and created_time is ok)
-}
-explore: sequence_input__order_item_for_order__explore {#?name by the parent/child combination?
-  extends:[my_explore] #update 'my_explore' to your explore name
-  #may need to explicitly mention base view name of my_explore (if it's not set explicitly in the base)
-  join: sequence_input__order_item_for_order__view {sql:;;relationship:one_to_one}
-  join: sequence_input__order_item_for_order__ndt {
-    sql_on:
-      sequence_input__order_item_for_order__ndt.child_unique_id   =${sequence_input__order_item_for_order__view.input_child_unique_id__dimension} and
-      sequence_input__order_item_for_order__ndt.parent_unique_id  =${sequence_input__order_item_for_order__view.input_parent_unique_id__dimension} and
-      sequence_input__order_item_for_order__ndt.order_by_dimension=${sequence_input__order_item_for_order__view.order_by_dimension}
-      ;;
-    relationship: one_to_one
-  }
-}
-view: sequence_input__order_item_for_order__ndt {
-  extends:[sequencing_ndt]
-  derived_table: {
-    #update with the name of the input explore you defined
-    explore_source: sequence_input__order_item_for_order__explore {
-      #update the base view name of each field to the input view you defined
-      column: parent_unique_id    {field:sequence_input__order_item_for_order__view.input_parent_unique_id__dimension}
-      column: child_unique_id     {field:sequence_input__order_item_for_order__view.input_child_unique_id__dimension}
-      column: order_by_dimension  {field:sequence_input__order_item_for_order__view.order_by_dimension}
-    }
-  }
-}
-
-# A third Extended version.  Shows multiple different transactions sequences at once
-# process to create a new version (after manifest and paste template
-# (BB Step 1): Update the dimnensions named below, for the sequencing you want
-# (BB Step 2): Update the view name just above, replacing [the templated name] (the text up to '__view') with the [name you want for this anaylysis]
-# (BB Step 3): Find and replace occurrences of [the templated name] with your updated name. (varios references to ...__view, ...__ndt, and ...__explore
-# (BB Step 4): Update 'my_explore' in __explore to match the explore you want to use this with
-# (BB Step 5): Update your main explore by extending with [name you want for this anaylysis]__explore
-view: sequence_input__order_item_for_gender__view {#?name by the parent/child combination?
-  #Update with fields that are valid together in an explore:
-  dimension: input_parent_unique_id__dimension  {sql:${users.gender};;}
-  dimension: input_child_unique_id__dimension   {sql:${order_items.id};;}
-  dimension: order_by_dimension                 {sql:${order_items.id};;}#must be same as child field or have a one_to_one relationship (ie id and created_time is ok)
-}
-view: sequence_input__order_item_for_gender__ndt {
-  extends:[sequencing_ndt]
-  derived_table: {
-    #update with the name of the input explore you defined
-    explore_source: sequence_input__order_item_for_gender__explore {
-      #update the base view name of each field to the input view you defined
-      column: parent_unique_id    {field:sequence_input__order_item_for_gender__view.input_parent_unique_id__dimension}
-      column: child_unique_id     {field:sequence_input__order_item_for_gender__view.input_child_unique_id__dimension}
-      column: order_by_dimension  {field:sequence_input__order_item_for_gender__view.order_by_dimension}
-    }
-  }
-}
-explore: sequence_input__order_item_for_gender__explore {#?name by the parent/child combination?
-  extends:[my_explore] #update 'my_explore' to your explore name
-  #may need to explicitly mention base view name of my_explore (if it's not set explicitly in the base)
-  join: sequence_input__order_item_for_gender__view {sql:;;relationship:one_to_one}
-  join: sequence_input__order_item_for_gender__ndt {
-    sql_on:
-        sequence_input__order_item_for_gender__ndt.child_unique_id   =${sequence_input__order_item_for_gender__view.input_child_unique_id__dimension} and
-        sequence_input__order_item_for_gender__ndt.parent_unique_id  =${sequence_input__order_item_for_gender__view.input_parent_unique_id__dimension} and
-        sequence_input__order_item_for_gender__ndt.order_by_dimension=${sequence_input__order_item_for_gender__view.order_by_dimension}
-        ;;
-    relationship: one_to_one
-  }
-}
+include: "ranking_views.view"
 
 
-
-
+##########################
+### Demo Explore
+# (BB Step): Add/Update Extends with the names of Block Explores you created.
 explore: my_explore {
   #update with any number of sequencing explores
-  extends: [sequence_input__order_item_for_user__explore,sequence_input__order_item_for_order__explore,sequence_input__order_item_for_gender__explore]
+  extends: [
+    ,rank__order_item__for__gender__explore
+    ,rank__order_item__for__age__explore
+    ,rank__user_id__for_user_days_since_joined__and__first_name__explore
+    ,rank__sale_price__for_user__explore
+    ,rank__order_item__for_user__explore
+    ,rank__order_item_for_user_with_toggle__explore
+    ]
 
   from: order_items
   view_name: order_items
   join: users {
     sql_on: ${order_items.user_id}=${users.id} ;;
-    type: left_outer
+    type: full_outer
     relationship: many_to_one
   }
+
 }
-
-###############
-### move to sequencing lookml file
-
-# original one time use input explore
-# need to remove specific references..
-explore: sequence_input_explore {
-  extends:[my_explore,sequence_input_explore_placeholder]}#update to your explore name
-view: sequence_input {
-  # dimension: input_parent_unique_id__dimension {sql:${order_items.order_id};;}
-  # dimension: input_child_unique_id__dimension {sql:${order_items.id};;}
-  # dimension: order_by_dimension {sql:${order_items.id};;}#must be same as child field or have a one_to_one relationship (ie id and created_time is ok)
-  dimension: input_parent_unique_id__dimension {sql:;;}
-  dimension: input_child_unique_id__dimension {sql:;;}
-  dimension: order_by_dimension {sql:;;}#must be same as child field or have a one_to_one relationship (ie id and created_time is ok)
-  #order by?
-}
-#########
-
-
-explore: sequence_input_explore_placeholder {
-  extension: required
-  join: sequence_input {sql:;;relationship:one_to_one}
-  join: sequencing_ndt {
-    sql_on:
-      ${sequencing_ndt.child_unique_id}=${sequence_input.input_child_unique_id__dimension} and
-      ${sequencing_ndt.parent_unique_id}=${sequence_input.input_parent_unique_id__dimension} and
-      ${sequencing_ndt.order_by_dimension}=${sequence_input.order_by_dimension};;
-    relationship: one_to_one
-  }
-}
-
-view: sequencing_ndt {
-  extends: [sequence_input]
-  derived_table: {
-    explore_source: sequence_input_explore {
-      column: parent_unique_id  {field:sequence_input.input_parent_unique_id__dimension}
-      column: child_unique_id   {field:sequence_input.input_child_unique_id__dimension}
-
-      column: order_by_dimension {field:sequence_input.order_by_dimension}
-
-      derived_column: sequence_number {sql:ROW_NUMBER() OVER(PARTITION BY parent_unique_id ORDER BY order_by_dimension);;}
-    }
-  }
-
-  dimension: parent_unique_id {type:number}
-  dimension: child_unique_id {type:number}
-  dimension: order_by_dimension {type:number}
-  dimension: sequence_number {type:number}
-}
-
-
-
-
-# view: sequencing_ndt {
-#   derived_table: {
-#     explore_source: sequence_base_placeholder {
-#       column: parent_unique_id  {field:order_items.order_id}
-#       column: child_unique_id   {field:order_items.id}
-
-#       derived_column: sequence_number {sql:ROW_NUMBER() OVER(PARTITION BY parent_unique_id ORDER BY child_unique_id);;}
-#     }
-#   }
-
-#   dimension: parent_unique_id {type:number}
-#   dimension: child_unique_id {type:number}
-#   dimension: sequence_number {type:number}
-# }

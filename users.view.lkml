@@ -25,6 +25,7 @@ view: users{
 #     timeframes: [raw,date]
 #     sql: getdate() ;;
 #   }
+  dimension: first_name {}
   measure: count {type: count}
   dimension: days_since_joined {
     type: duration_day
