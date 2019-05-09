@@ -206,7 +206,7 @@ else null end
       ,1)
       end
     ;;
-    html: <span class="label label-info">{{tier_number._value}}</span> {{rendered_value}} ;;
+    # html: <span class="label label-info">{{tier_number._value}}</span> {{rendered_value}} ;;
   }
 #   measure: range_of_values {#was helpful for testing. might be interesting to enable in an extended version, but for now, don't want to clutter the field picker
 #     type: string
