@@ -1,4 +1,5 @@
 - dashboard: dashboard_to_be_extended
+  extension: required
   title: dashboard_to_be_extended
   layout: newspaper
   load_configuration: wait
