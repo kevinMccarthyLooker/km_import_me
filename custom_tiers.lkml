@@ -16,13 +16,14 @@ view: custom_tiers__base {
     hidden: yes
     type: number
     sql:  1;;
+    value_format_name: id
   }
   #the output field that will reflect the custom groups on field_to_compare
   dimension: compare_groups{
 #   label: "{% assign to_be_removed = _view._name | append: '.' %}{% assign label = field_to_compare._sql | replace: to_be_removed ,'' %}{% if compare_groups._in_query == false %}Binary Compare On {{label}}{% else %}{{label}} Group{% endif %}"
     label: "{{_view._name | replace: '_',' ' }} - Grouping"
     order_by_field: tier_number
-    html: <span class="label label-info">{{tier_number._value}}</span> {{rendered_value}} ;;
+    html: <span class="label label-info">{{tier_number._rendered_value}}</span> {{rendered_value}} ;;
   }
 }
 

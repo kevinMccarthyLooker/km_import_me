@@ -17,6 +17,11 @@ view: sequence_input {
 # ;;
       sql:{% if order_by_descending_toggle._sql == 'true' %}DESC{% endif %};;
     }
+  measure: order_by_measure {
+#     sql:${order_items.total_sale_price};;
+    hidden: yes
+    sql:null    ;;
+  }
     #(Customization): bind dimension references can be added here if necessary. Will have to list each explicitly here and in corresponding bind_filters parameter of the ranking view
     #dimension: age_and_gender_combo {sql:${users.age_and_gender_combo};;}
 }
@@ -69,21 +74,25 @@ view: sequencing_ndt {
   derived_table: {
     explore_source: sequence_input_explore {
       timezone: "query_timezone"
-      column: parent_unique_id  {field:sequence_input.input_parent_unique_id__dimension}
-      column: child_unique_id   {field:sequence_input.input_child_unique_id__dimension}#
-      column: order_by_dimension {field:sequence_input.order_by_dimension}
+      column: parent_unique_id    {field:sequence_input.input_parent_unique_id__dimension}
+      column: child_unique_id     {field:sequence_input.input_child_unique_id__dimension}#
+      column: order_by_dimension  {field:sequence_input.order_by_dimension}
+      column: order_by_measure    {field:sequence_input.order_by_measure}
 #       column: order_by_descending_toggle {field:sequence_input.order_by_descending_toggle}
 
-      derived_column: sequence_number {sql:ROW_NUMBER() OVER(PARTITION BY parent_unique_id ORDER BY order_by_dimension;;}#Right paren will be added in extending explore
+      derived_column: sequence_number {sql:ROW_NUMBER() OVER(PARTITION BY parent_unique_id ORDER BY order_by_dimension,order_by_measure;;}#Right paren will be added in extending explore
     }
   }
 
   dimension: parent_unique_id   {hidden: yes}
   dimension: child_unique_id    {hidden:yes}
   dimension: order_by_dimension {hidden:yes}#must be same as child field or have a one_to_one relationship (ie id and created_time is ok)
+  dimension: order_by_measure     {hidden:yes}#must be same as child field or have a one_to_one relationship (ie id and created_time is ok)
 
   dimension: sequence_number    {
     type:number
+    html: <span title="ttttttt">{{rendered_value}}</span> ;;
+#     ({{parent_unique_id._value}} - {{child_unique_id._value}}: {{order_by_measure._value}})
   }
 
   dimension: input_parent_unique_id__dimension {

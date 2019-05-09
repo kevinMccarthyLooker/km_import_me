@@ -480,6 +480,9 @@ explore: my_explore {
     ,rank__sale_price__for_user__explore
     ,rank__order_item__for_user__explore
     ,rank__order_item_for_user_with_toggle__explore
+    ,rank__item_name__for__brand__by_avg_sale_price__explore
+    ,rank__item_name__for__total_sale_price__explore
+    ,users_lag_between_orders__explore
     ]
 
   from: order_items
@@ -488,6 +491,16 @@ explore: my_explore {
     sql_on: ${order_items.user_id}=${users.id} ;;
     type: full_outer
     relationship: many_to_one
+  }
+  join: inventory_items {
+    sql_on: ${inventory_items.id}=${order_items.inventory_item_id} ;;
+    relationship: many_to_one
+    type: left_outer
+  }
+  join: products {
+    sql_on: ${inventory_items.product_id}=${products.id} ;;
+    relationship: many_to_one
+    type: left_outer
   }
 
 }
