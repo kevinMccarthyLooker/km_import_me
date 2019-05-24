@@ -80,7 +80,7 @@ view: sequencing_ndt {
       column: order_by_measure    {field:sequence_input.order_by_measure}
 #       column: order_by_descending_toggle {field:sequence_input.order_by_descending_toggle}
 
-      derived_column: sequence_number {sql:ROW_NUMBER() OVER(PARTITION BY parent_unique_id ORDER BY order_by_dimension,order_by_measure);;}
+      derived_column: sequence_number {sql:ROW_NUMBER() OVER(PARTITION BY parent_unique_id ORDER BY order_by_dimension,order_by_measure;;}
       #old comment:Right paren will be added in extending explore
     }
   }
