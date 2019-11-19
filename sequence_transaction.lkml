@@ -78,6 +78,8 @@ view: sequencing_ndt {
       column: child_unique_id     {field:sequence_input.input_child_unique_id__dimension}#
       column: order_by_dimension  {field:sequence_input.order_by_dimension}
       column: order_by_measure    {field:sequence_input.order_by_measure}
+#       bind_all_filters: yes #bind all filters exists now... does it simply work here?
+
 #       column: order_by_descending_toggle {field:sequence_input.order_by_descending_toggle}
 
       derived_column: sequence_number {sql:ROW_NUMBER() OVER(PARTITION BY parent_unique_id ORDER BY order_by_dimension,order_by_measure;;}

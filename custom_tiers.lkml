@@ -218,6 +218,10 @@ else null end
 # User specifies any number of arbitrary cutoffs in a parameter
   view: custom_tiers__arbitrary_cutoffs {
     extends: [custom_tiers__base]
+    #inherited from custom_tiers_base
+    # dimension: field_to_compare{}
+    # dimension: tier_number {}
+
     parameter: compare_cutoffs__arbitrary{
       #view_label: "Custom Tiers-{{_view._name}}"
       label: "Define Tiers using any number of comma separated breakpoints"

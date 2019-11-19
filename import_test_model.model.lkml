@@ -57,12 +57,60 @@ include: "custom_tiers"
   explore: users_for_custom_tiers_examples {
     from: users
     view_name: users
-    join: age__with_custom_threshold    {relationship: one_to_one sql:;;}
-    join: age_tiers__by_number_buckets  {relationship: one_to_one sql:;;}
-    join: age_tiers__by_bucket_size     {relationship: one_to_one sql:;;}
+#     join: age__with_custom_threshold    {relationship: one_to_one sql:;;}
+#     join: age_tiers__by_number_buckets  {relationship: one_to_one sql:;;}
+#     join: age_tiers__by_bucket_size     {relationship: one_to_one sql:;;}
     join: age_tiers__arbitrary_cutoffs  {relationship: one_to_one sql:;;}
   }
 #} end fold
+
+
+
+###20190725 test implementation
+  view: age_tiers__custom_tiers_example{extends:[custom_tiers__arbitrary_cutoffs]        dimension: field_to_compare {sql:${users.age};;}}
+  view: order_item_sale_price__custom_tiers_example{extends:[custom_tiers__arbitrary_cutoffs]        dimension: field_to_compare {sql:${order_items.sale_price};;}}
+
+#   join: order_item_sale_price__custom_tiers_example  {relationship: one_to_one sql:;;}
+
+
+
+
+
+
+explore: order_items_with_custom_tiers_examples {
+  join: age_tiers__custom_tiers_example  {relationship: one_to_one sql:;;}
+
+  from: order_items
+  view_name: order_items
+  join: users {
+    sql_on: ${users.id}=${order_items.user_id} ;;
+    relationship: many_to_one
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

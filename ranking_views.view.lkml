@@ -533,3 +533,56 @@ explore: users_lag_between_orders__explore {#?name by the parent/child combinati
     relationship: many_to_one
   }# dev note:in case the unique_id field isn't really unique, this is more accurate. don't plan to measure things on the sequencing, so symmetric aggregates wont be invoked
 }
+
+
+
+
+
+
+
+
+
+#### 10/16 test
+view: sequence_input__order_item_for_city__view {#?name by the parent/child combination?
+  extends: [sequence_input]
+  #Update with fields that are valid together in an explore:
+  dimension: input_parent_unique_id__dimension  {sql:${users.city};;}
+  dimension: input_child_unique_id__dimension   {sql:${order_items.id};;}
+  dimension: order_by_dimension                 {sql:${order_items.created_raw};;}#must be same as child field or have a one_to_one relationship (ie id and created_time is ok)
+  measure:   order_by_measure                   {sql:null;;}#optional measure input
+  dimension: order_by_descending_toggle         {sql:true;;}
+  #bind dimension references can be added here if necessary. Will have to list each explicitly here and in corresponding bind_filters parameter of the ranking view
+  #dimension: age_and_gender_combo {sql:${users.age_and_gender_combo};;}
+}
+view: rank__order_item__for__city {
+  extends:[sequencing_ndt]
+  derived_table: {
+    #update with the name of the input explore you defined
+    explore_source: rank__order_item__for__city__explore {
+      column: parent_unique_id  {field:sequence_input__order_item_for_city__view.input_parent_unique_id__dimension}
+      column: child_unique_id   {field:sequence_input__order_item_for_city__view.input_child_unique_id__dimension}#
+      column: order_by_dimension {field:sequence_input__order_item_for_city__view.order_by_dimension}
+      column: order_by_measure {field:sequence_input__order_item_for_city__view.order_by_measure}
+
+      derived_column: sequence_number {sql:${EXTENDED} {{ sequence_input__order_item_for_city__view.order_by_descending_text_for_sql._sql }});;}
+      #bind filters can be added here if necessary. List
+      #bind_filters: {from_field: users.age_and_gender_combo to_field: sequence_input__order_item_for_gender__view.age_and_gender_combo} #bind filters where necessary... no way to pre-emptively bind all filters
+
+    }
+  }
+}
+explore: rank__order_item__for__city__explore {#?name by the parent/child combination?
+  #update 'my_explore' to your explore name
+  extends:[my_explore]
+  # view_name: my_expl
+  #?may need to explicitly mention base view name of my_explore (if it's not set explicitly in the base). not sure if that's the case though. further testing required
+  #update the from to match the input view name above
+  join: sequence_input__order_item_for_city__view {sql:;;relationship:one_to_one}
+#update the join name to match the ranking view defined above, and update the references to mach that same join name
+join: rank__order_item__for__city {
+  sql_on:
+    ${rank__order_item__for__city.child_unique_id}   =${sequence_input__order_item_for_city__view.input_child_unique_id__dimension} and
+    ${rank__order_item__for__city.parent_unique_id}  =${sequence_input__order_item_for_city__view.input_parent_unique_id__dimension} and
+    ${rank__order_item__for__city.order_by_dimension}=${sequence_input__order_item_for_city__view.order_by_dimension};;
+  relationship: many_to_one}# dev note:in case the unique_id field isn't really unique, this is more accurate. don't plan to measure things on the sequencing, so symmetric aggregates wont be invoked
+}

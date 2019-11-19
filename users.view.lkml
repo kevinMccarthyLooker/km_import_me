@@ -43,5 +43,6 @@ view: users{
   dimension: age_and_gender_combo {
     sql: ${age}||'-'||${gender}  ;;
 }
+dimension: city {}
 
 }
